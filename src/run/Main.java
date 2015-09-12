@@ -25,9 +25,11 @@ public class Main {
 		for(Checkin c:checkins){
 			tmp = Math.random();
 			if(tmp>shreshold){
+				c.state1 = 0;
 				home.add(c);
 			}
 			else{
+				c.state1 = 1;
 				work.add(c);
 			}
 		}
@@ -46,7 +48,10 @@ public class Main {
 		double workProbability;
 		double time;
 		double size = checkins.size();
+		double total;
+		boolean isFirst = true;
 		while(1<2){
+			total = 0;
 			home = new ArrayList<Checkin>();
 			work = new ArrayList<Checkin>();
 //			ArrayListUtil.clearArray(home);
@@ -55,10 +60,16 @@ public class Main {
 				time = Integer.parseInt(checkins.get(i).time.substring(11, 13)) + (double)Integer.parseInt(checkins.get(i).time.substring(14, 16))/60;
 				homeProbability = MathUtil.computeGaussianProbability(time,Ph,homeMean, homeCo, Math.PI/12);
 				workProbability = MathUtil.computeGaussianProbability(time,Pw,workMean, workMean, Math.PI/12);
+				if(isFirst){
+					isFirst = false;
+					checkins.get(i).state1 = checkins.get(i).state2;
+				}
 				if(homeProbability>workProbability){
+					checkins.get(i).state2 = 0;
 					home.add(checkins.get(i));
 				}
 				else{
+					checkins.get(i).state2 = 1;
 					work.add(checkins.get(i));
 				}
 			}
@@ -66,12 +77,16 @@ public class Main {
 			workMean = EMUtils.computeTimeMean(work);
 			homeCo = EMUtils.computeTimeCovariance(homeMean,home);
 			workCo = EMUtils.computeTimeCovariance(workMean,work);
-			
+			for (int i = 0; i < size; i++) {
+				if(checkins.get(i).state1 != checkins.get(i).state2)
+					total++;
+			}
 			//The convergence condition
-			if(1<2){
+			if(total/size < 0.2){
 				//Output the home and work
 				double[]coreHomelocation = EMUtils.computeLocationMean(home);
 				double[]coreWorklocation = EMUtils.computeLocationMean(work);
+				break;
 			}
 		}
 		
